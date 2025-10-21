@@ -1,4 +1,5 @@
 use inquire::{Confirm, CustomType};
+use inquire::validator::Validation;
 
 fn main() {
     if play_game() {
@@ -23,23 +24,32 @@ fn play_game() -> bool {
         Err(_) => println!("ohhh noe"),
     }
 
-    return false;
+    false
 }
 
 fn num_guessing_game() -> i8 {
-    let num_guessing_prompt = CustomType::<i8>::new ("Guess a number 1 - 100")
+    let num_guessing_prompt = CustomType::<i8>::new ("I'm thinking of a number between 1 - 100, try to guess it.")
         .with_formatter(&|i| format!("${:.2}", i))
-        .with_error_message("That is not an acceptable input, try again")
+        .with_error_message("Enter a number between 1 and 100")
+        .with_validator(|input:&i8| {
+            if *input == 67 {
+                Ok(Validation::Invalid("Absolutely not, you know why".into()))
+            }else if *input > 0 && *input <= 100 {
+                Ok(Validation::Valid)
+            } else {
+                Ok(Validation::Invalid("You must enter a value between 1 - 100".into()))
+            }
+        })
         .prompt();
 
     match num_guessing_prompt {
         Ok(guess) => {
             println!("Your number is {}", guess);
-            return guess;
+            guess
         },
         Err(_) => {
             println!("ohhh no");
-            return -1;
+            -1
         },
     }
 }
