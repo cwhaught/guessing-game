@@ -11,7 +11,7 @@ fn main() {
 }
 
 fn play_game() -> bool {
-    let play_game_prompt = Confirm::new("Do you want to play a guessing game?")
+    let play_game_prompt = Confirm::new("Do you want to play a number guessing game?")
         .with_default(false)
         .prompt();
 
@@ -40,9 +40,9 @@ fn num_guessing_game() -> i8 {
                 Ok(Validation::Invalid("Absolutely not, you know why".into()))
             } else if (*input > 0 && *input < 101) && *input != random_num {
                 if *input > random_num {
-                    Ok(Validation::Invalid("You guessed too high".into()))
+                    Ok(Validation::Invalid(format!("{input} is too high").into()))
                 } else {
-                    Ok(Validation::Invalid("You guessed too low".into()))
+                    Ok(Validation::Invalid(format!("{input} is too low").into()))
                 }
             } else if *input == random_num {
                 Ok(Validation::Valid)
