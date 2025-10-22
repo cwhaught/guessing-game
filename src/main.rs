@@ -4,35 +4,34 @@ use rand::Rng;
 
 fn main() {
     const GAME_NUM_GUESS: &str = "Number Guessing";
-    const GAME_MATCHING: &str = "Matching";
+    const GAME_MULTI: &str = "Multiplication Tables";
     const GAME_DONE: &str = "I'm Done";
 
-    let game_options: Vec<&str> = vec![GAME_NUM_GUESS, GAME_MATCHING, GAME_DONE];
+    loop {
+        let game_options: Vec<&str> = vec![GAME_NUM_GUESS, GAME_MULTI, GAME_DONE];
+        let choice = play_game(game_options);
 
-    let choice = play_game(game_options);
-
-    if choice == GAME_NUM_GUESS {
-        num_guessing_game();
-    } else if choice == GAME_MATCHING {
-        num_guessing_game();
-    } else {
-        println!("See you next time!");
+        if choice == GAME_DONE {
+            break;
+        } else {
+            if choice == GAME_NUM_GUESS {
+                num_guessing_game();
+            } else if choice == GAME_MULTI {
+                game_multiplication_tables();
+            }
+        }
     }
+
+    println!("See you next time!");
 }
 
 fn play_game(game_options: Vec<&str>) -> &str {
     let ans: Result<&str, InquireError> = Select::new("What kind of game do you want to play?", game_options).prompt();
 
-    match ans {
-        Ok(choice) => {
-            println!("{}! Great! Let's do it!", choice);
-            choice
-        },
-        Err(_) => {
-            println!("Beep boop, something went wrong...");
-            ""
-        },
-    }
+    ans.unwrap_or_else(|_| {
+        println!("Beep boop, something went wrong...");
+        ""
+    })
 }
 
 fn num_guessing_game() -> i8 {
@@ -66,6 +65,36 @@ fn num_guessing_game() -> i8 {
     match num_guessing_prompt {
         Ok(guess) => {
             println!("YOU GOT IT! My number was {}", guess);
+            guess
+        },
+        Err(_) => {
+            println!("ohhh no");
+            -1
+        },
+    }
+}
+
+fn game_multiplication_tables() -> i16 {
+    let first_num:i8 = rand::rng().random_range(0..13);
+    let second_num:i8 = rand::rng().random_range(0..13);
+    let answer:i16 = (first_num as i16) * (second_num as i16);
+    let question = format!("What's {first_num} times {second_num}?");
+
+    let num_guessing_prompt = CustomType::<i16>::new (&question)
+        .with_formatter(&|i| format!("${:.2}", i))
+        .with_error_message("Enter a valid number")
+        .with_validator(move |input:&i16| {
+            if *input == answer {
+                Ok(Validation::Valid)
+            } else {
+                Ok(Validation::Invalid(format!("{input} isn't correct, try again").into()))
+            }
+        })
+        .prompt();
+
+    match num_guessing_prompt {
+        Ok(guess) => {
+            println!("YOU GOT IT! The Answer is {}", guess);
             guess
         },
         Err(_) => {
