@@ -1,27 +1,38 @@
-use inquire::{Confirm, CustomType};
+use inquire::{CustomType, InquireError, Select};
 use inquire::validator::Validation;
 use rand::Rng;
 
 fn main() {
-    if play_game() {
+    const GAME_NUM_GUESS: &str = "Number Guessing";
+    const GAME_MATCHING: &str = "Matching";
+    const GAME_DONE: &str = "I'm Done";
+
+    let game_options: Vec<&str> = vec![GAME_NUM_GUESS, GAME_MATCHING, GAME_DONE];
+
+    let choice = play_game(game_options);
+
+    if choice == GAME_NUM_GUESS {
+        num_guessing_game();
+    } else if choice == GAME_MATCHING {
         num_guessing_game();
     } else {
-        println!("Pretend you're on the main screen of a game.");
+        println!("See you next time!");
     }
 }
 
-fn play_game() -> bool {
-    let play_game_prompt = Confirm::new("Do you want to play a number guessing game?")
-        .with_default(false)
-        .prompt();
+fn play_game(game_options: Vec<&str>) -> &str {
+    let ans: Result<&str, InquireError> = Select::new("What kind of game do you want to play?", game_options).prompt();
 
-    match play_game_prompt {
-        Ok(true) => return true,
-        Ok(false) => println!("Lame. I didn't want to play with you anyway."),
-        Err(_) => println!("ohhh noe"),
+    match ans {
+        Ok(choice) => {
+            println!("{}! Great! Let's do it!", choice);
+            choice
+        },
+        Err(_) => {
+            println!("Beep boop, something went wrong...");
+            ""
+        },
     }
-
-    false
 }
 
 fn num_guessing_game() -> i8 {
