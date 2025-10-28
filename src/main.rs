@@ -6,10 +6,10 @@ fn main() {
     const GAME_NUM_GUESS: &str = "Number Guessing";
     const GAME_MULTI: &str = "Multiplication Tables";
     const GAME_DONE: &str = "I'm Done";
+    let game_options: [&str; 3] = [GAME_NUM_GUESS, GAME_MULTI, GAME_DONE];
 
     loop {
-        let game_options: Vec<&str> = vec![GAME_NUM_GUESS, GAME_MULTI, GAME_DONE];
-        let choice = play_game(game_options);
+        let choice = play_game(&game_options);
 
         if choice == GAME_DONE {
             break;
@@ -25,8 +25,8 @@ fn main() {
     println!("See you next time!");
 }
 
-fn play_game(game_options: Vec<&str>) -> &str {
-    let ans: Result<&str, InquireError> = Select::new("What kind of game do you want to play?", game_options).prompt();
+fn play_game<'a>(game_options: &[&'a str]) -> &'a str {
+    let ans: Result<&str, InquireError> = Select::new("What kind of game do you want to play?", game_options.to_vec()).prompt();
 
     ans.unwrap_or_else(|_| {
         println!("Beep boop, something went wrong...");
@@ -74,32 +74,44 @@ fn num_guessing_game() -> i8 {
     }
 }
 
-fn game_multiplication_tables() -> i16 {
-    let first_num:i8 = rand::rng().random_range(0..13);
-    let second_num:i8 = rand::rng().random_range(0..13);
-    let answer:i16 = (first_num as i16) * (second_num as i16);
-    let question = format!("What's {first_num} times {second_num}?");
+fn game_multiplication_tables() {
+    let mut correct_answers = 0;
+    let mut total_guesses = 0;
+    // exit value
+    const EXIT: i16 = -1;
 
-    let num_guessing_prompt = CustomType::<i16>::new (&question)
-        .with_formatter(&|i| format!("${:.2}", i))
-        .with_error_message("Enter a valid number")
-        .with_validator(move |input:&i16| {
-            if *input == answer {
-                Ok(Validation::Valid)
-            } else {
-                Ok(Validation::Invalid(format!("{input} isn't correct, try again").into()))
+    loop {
+        let first_num:i8 = rand::rng().random_range(0..13);
+        let second_num:i8 = rand::rng().random_range(0..13);
+        let answer:i16 = (first_num as i16) * (second_num as i16);
+        let question = format!("What's {first_num} * {second_num}? (enter -1 to quit)");
+
+        let num_guessing_prompt = CustomType::<i16>::new (&question)
+            .with_error_message("Enter a valid number, or -1 to quit")
+            .prompt();
+
+
+        match num_guessing_prompt {
+            Ok(EXIT) => {
+                // User wants to quit
+                if total_guesses > 0 {
+                    let percentage = (correct_answers as f32 / total_guesses as f32) * 100.0;
+                    println!("\n📊 Final Score:");
+                    println!("✓ Correct: {}/{} ({:.1}%)", correct_answers, total_guesses, percentage);
+                    println!("✗ Incorrect: {}", total_guesses - correct_answers);
+                }
+                break;
             }
-        })
-        .prompt();
-
-    match num_guessing_prompt {
-        Ok(guess) => {
-            println!("YOU GOT IT! The Answer is {}", guess);
-            guess
-        },
-        Err(_) => {
-            println!("ohhh no");
-            -1
-        },
+            Ok(guess) => {
+                total_guesses += 1;
+                if guess == answer {
+                    println!("✓ Correct! The answer is {}\n", answer);
+                    correct_answers += 1;
+                } else {
+                    println!("✗ Incorrect. The answer is {}\n", answer);
+                }
+            },
+            Err(_) => println!("ohhh no"),
+        }
     }
 }
